@@ -16,6 +16,7 @@ class JJ_NGG_JQuery_Slider extends WP_Widget
 
     // Set params
     $title = apply_filters('widget_title', $instance['title']);
+    $tags = $this->get_val($instance, 'tags');
     $html_id = $this->get_val($instance, 'html_id', 'slider');
     $width = $this->get_val_numeric($instance, 'width');
     $height = $this->get_val_numeric($instance, 'height');
@@ -99,7 +100,35 @@ class JJ_NGG_JQuery_Slider extends WP_Widget
     $p_size = 0;
     if(is_array($results))
     {
-       $p_size = count($results);
+      // Filter by tag
+      if($tags != '')
+      {
+        $tagged_images = nggTags::find_images_for_tags($tags);
+
+        if($tagged_images)
+        {
+          foreach($tagged_images as $image)
+          {
+            $tagged_image_ids[] = $image->pid;
+          }
+
+          foreach($results as $result)
+          {
+            if(in_array($result->pid, $tagged_image_ids))
+            {
+              $filtered_results[] = $result;
+            }
+          }
+
+          $results = $filtered_results;
+        }
+        else
+        {
+          $results = array();
+        }
+      }
+
+      $p_size = count($results);
     }
     
     $output = '';                
@@ -368,6 +397,7 @@ class JJ_NGG_JQuery_Slider extends WP_Widget
     $instance = wp_parse_args((array) $instance, array(
       'title' => '',
       'gallery' => '',
+      'tags' => '',
       'html_id' => 'slider',
       'width' => '',
       'height' => '',
@@ -437,6 +467,10 @@ class JJ_NGG_JQuery_Slider extends WP_Widget
       No galleries found
     <?php } ?>
   </p>  
+  <p>
+    <label for="<?php echo $this->get_field_id('tags'); ?>"><strong>Only display images tagged:</strong></label><br />
+    <input type="text" id="<?php echo $this->get_field_id('tags'); ?>" name="<?php echo $this->get_field_name('tags'); ?>" value="<?php echo $instance['tags']; ?>"  class="widefat" />
+  </p>
   <p>
     <label for="<?php echo $this->get_field_id('order'); ?>"><strong>Order:</strong></label><br />
     <select id="<?php echo $this->get_field_id('order'); ?>" name="<?php echo $this->get_field_name('order'); ?>" class="widefat">
